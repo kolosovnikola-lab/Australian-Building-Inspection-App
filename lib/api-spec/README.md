@@ -28,6 +28,8 @@ with `main` as its default branch. Its active
 requires **Clean API generation**, specifically from the GitHub Actions app.
 Branches must be up to date before merging. The ruleset has no bypass actors,
 including administrators; unrelated repository rules must remain unchanged.
+The controlled failing/passing verification is recorded in
+[pull request #1](https://github.com/kolosovnikola-lab/Australian-Building-Inspection-App/pull/1).
 
 Keep the job name stable: renaming the job without updating the ruleset leaves
 pull requests waiting for a required check that no longer runs. Never remove the
@@ -40,6 +42,11 @@ request with deliberate generated-file drift. Wait for the real hosted check to
 fail, confirm GitHub rejects merging, then remove the drift and confirm a
 successful hosted check permits merging. Do not replace this test with a manually
 posted commit status: the required check is bound to the GitHub Actions app.
+
+The drift comparison must run from the repository root, not the API-spec package
+directory. Run `pnpm --filter @workspace/api-spec run test:generated-drift` to
+check that the production command detects changes in either generated library
+when invoked from the package directory.
 
 # API contract changes
 
