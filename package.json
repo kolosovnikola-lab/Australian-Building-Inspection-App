@@ -7,7 +7,7 @@
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "test:api-compatibility": "pnpm --filter @workspace/api-spec run test:compatibility",
-    "validate:api-generated": "pnpm --filter @workspace/api-spec run check:compatibility && pnpm --filter @workspace/api-spec run verify",
+    "validate:api-generated": "pnpm run test:api-compatibility && pnpm --filter @workspace/api-spec run test:generated-drift && pnpm --filter @workspace/api-spec run check:compatibility && pnpm --filter @workspace/api-spec run verify",
     "validate:api-generated:clean": "sh -c 'echo \"[api-generated] setup: installing the locked workspace dependencies\"; if ! pnpm install --frozen-lockfile; then echo \"[api-generated] setup failed: frozen-lockfile install could not reproduce the workspace\" >&2; exit 1; fi; pnpm run validate:api-generated'",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
