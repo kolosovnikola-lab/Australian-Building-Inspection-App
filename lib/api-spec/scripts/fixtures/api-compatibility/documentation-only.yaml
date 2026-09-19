@@ -1,0 +1,96 @@
+openapi: 3.1.0
+info:
+  title: Inspection API Compatibility Fixture
+  description: API documentation for inspection clients.
+  version: 1.0.0
+  contact:
+    name: API Support
+externalDocs:
+  description: Integration guide
+  url: https://example.com/inspection-guide
+tags:
+  - name: Inspections
+    description: Create and retrieve inspections.
+paths:
+  /inspections/{inspectionId}:
+    get:
+      operationId: getInspection
+      summary: Retrieve an inspection
+      description: Returns the inspection identified by its ID.
+      tags:
+        - Inspections
+      parameters:
+        - name: inspectionId
+          in: path
+          description: Unique identifier of the inspection to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The requested inspection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionResponse"
+  /inspections:
+    post:
+      operationId: createInspection
+      summary: Create an inspection
+      description: Creates an inspection with the supplied details.
+      tags:
+        - Inspections
+      requestBody:
+        description: Details used to create the inspection.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInspection"
+      responses:
+        "201":
+          description: The newly created inspection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionResponse"
+components:
+  schemas:
+    InspectionResponse:
+      title: Inspection details
+      description: An inspection returned to the client.
+      type: object
+      required:
+        - id
+        - status
+        - summary
+      properties:
+        id:
+          description: Unique inspection identifier.
+          type: string
+          examples:
+            - inspection-123
+        status:
+          $ref: "#/components/schemas/InspectionStatus"
+        summary:
+          description: A short inspection summary.
+          type: string
+    InspectionStatus:
+      description: Current publication status of the inspection.
+      type: string
+      enum:
+        - draft
+        - published
+        - archived
+    CreateInspection:
+      description: Information supplied when creating an inspection.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          description: Display name of the inspection.
+          type: string
+        address:
+          description: Optional address of the inspected property.
+          type: string

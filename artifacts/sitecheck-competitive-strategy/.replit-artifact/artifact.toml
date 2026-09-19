@@ -1,0 +1,28 @@
+kind = "slides"
+previewPath = "/sitecheck-competitive-strategy/"
+title = "SiteCheck AU Competitive Product Strategy"
+description = "A sourced competitive strategy deck comparing Australian inspection apps, global home-inspection platforms, and adjacent field and insurance claims tools, with a prioritized roadmap for SiteCheck AU."
+version = "1.0.0"
+id = "artifacts/sitecheck-competitive-strategy"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/sitecheck-competitive-strategy/" ]
+localPort = 25491
+
+[services.development]
+run = "pnpm --filter @workspace/sitecheck-competitive-strategy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/sitecheck-competitive-strategy", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/sitecheck-competitive-strategy/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25491"
+BASE_PATH = "/sitecheck-competitive-strategy/"

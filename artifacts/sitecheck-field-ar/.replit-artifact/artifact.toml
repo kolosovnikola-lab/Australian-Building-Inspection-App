@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/sitecheck-field-ar/"
+title = "SiteCheck Field AR"
+description = "A native mobile companion for SiteCheck AU inspectors, providing camera-assisted condition review, inspector-confirmed defect suggestions, and an offline-ready evidence draft queue that connects to the shared inspection platform."
+version = "1.0.0"
+id = "artifacts/sitecheck-field-ar"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/sitecheck-field-ar/" ]
+localPort = 20503
+
+[services.development]
+run = "pnpm --filter @workspace/sitecheck-field-ar run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/sitecheck-field-ar", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/sitecheck-field-ar", "run", "serve" ]
+
+[services.env]
+PORT = "20503"
+BASE_PATH = "/sitecheck-field-ar/"

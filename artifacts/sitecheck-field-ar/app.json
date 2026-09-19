@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "SiteCheck Field AR",
+    "slug": "sitecheck-field-ar",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "sitecheck-field-ar",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow SiteCheck Field AR to access your camera to capture inspection evidence."
+      }
+    },
+    "android": {},
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow SiteCheck Field AR to access your photos to attach existing evidence.",
+          "cameraPermission": "Allow SiteCheck Field AR to access your camera to capture inspection evidence."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

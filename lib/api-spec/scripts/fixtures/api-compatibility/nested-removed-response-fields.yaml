@@ -1,0 +1,40 @@
+openapi: 3.1.0
+info: { title: Nested compatibility fixture, version: 1.0.0 }
+paths:
+  /inspections/{inspectionId}:
+    get:
+      operationId: getInspection
+      parameters:
+        - { name: inspectionId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionResponse"
+components:
+  schemas:
+    InspectionResponse:
+      type: object
+      properties:
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Finding"
+        combined:
+          allOf:
+            - { type: object, properties: { id: { type: string } } }
+            - &details
+              type: object
+              properties:
+                status: { type: string, enum: [draft, published, archived] }
+        choice:
+          oneOf:
+            - { type: string }
+            - *details
+        alternative:
+          anyOf:
+            - { type: string }
+            - *details
+    Finding: *details

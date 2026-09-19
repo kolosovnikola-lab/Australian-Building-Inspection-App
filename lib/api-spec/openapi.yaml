@@ -1,0 +1,1418 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: inspections
+    description: Building and pest inspection operations
+  - name: findings
+    description: Inspection findings and evidence
+  - name: standards
+    description: Standards reference catalog
+  - name: ai
+    description: AI-assisted inspection wording
+  - name: reports
+    description: Client-ready inspection reports and delivery
+  - name: glossary
+    description: Workspace-managed plain-language advisory terms
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [inspections]
+      summary: Get inspection dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /usage:
+    get:
+      operationId: getWorkspaceUsage
+      tags: [inspections]
+      summary: Get workspace plan usage and allowances
+      responses:
+        "200":
+          description: Current usage for the active billing period
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceUsage"
+  /client-language-glossary:
+    get:
+      operationId: listClientLanguageGlossary
+      tags: [glossary]
+      summary: List active client-language advisory terms
+      responses:
+        "200":
+          description: Active workspace glossary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientLanguageGlossaryTerm"
+  /admin/client-language-glossary:
+    get:
+      operationId: listManagedClientLanguageGlossary
+      tags: [glossary]
+      summary: List all workspace client-language advisory terms
+      responses:
+        "200":
+          description: Workspace glossary including retired terms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientLanguageGlossaryTerm"
+        "403":
+          description: Manager access required
+    post:
+      operationId: createClientLanguageGlossaryTerm
+      tags: [glossary]
+      summary: Add a client-language advisory term
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientLanguageGlossaryInput"
+      responses:
+        "201":
+          description: Created glossary term
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientLanguageGlossaryTerm"
+        "409":
+          description: The term already exists
+  /admin/client-language-glossary/history:
+    get:
+      operationId: listClientLanguageGlossaryHistory
+      tags: [glossary]
+      summary: List workspace client-language glossary changes
+      responses:
+        "200":
+          description: Newest glossary changes for this workspace
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientLanguageGlossaryEvent"
+        "403":
+          description: Manager access required
+  /admin/client-language-glossary/{id}:
+    patch:
+      operationId: updateClientLanguageGlossaryTerm
+      tags: [glossary]
+      summary: Edit or retire a client-language advisory term
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientLanguageGlossaryUpdate"
+      responses:
+        "200":
+          description: Updated glossary term
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientLanguageGlossaryTerm"
+        "404":
+          description: Glossary term not found
+        "409":
+          description: The term already exists
+  /inspections:
+    get:
+      operationId: listInspections
+      tags: [inspections]
+      summary: List inspections
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, in_progress, complete]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Inspection list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Inspection"
+    post:
+      operationId: createInspection
+      tags: [inspections]
+      summary: Create an inspection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InspectionInput"
+      responses:
+        "201":
+          description: Created inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+  /admin/inspectors:
+    get:
+      operationId: listWorkspaceInspectors
+      tags: [inspections]
+      summary: List eligible inspectors for inspection assignment
+      responses:
+        "200":
+          description: Eligible workspace inspectors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceInspector"
+  /admin/inspections/{id}/assignment:
+    patch:
+      operationId: assignInspection
+      tags: [inspections]
+      summary: Assign or reassign an inspection to an inspector
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InspectionAssignmentInput"
+      responses:
+        "200":
+          description: Updated inspection ownership
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+        "403":
+          description: Manager access required
+        "404":
+          description: Inspection not found
+  /inspections/{id}:
+    get:
+      operationId: getInspection
+      tags: [inspections]
+      summary: Get an inspection and its findings
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Inspection detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionDetail"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateInspection
+      tags: [inspections]
+      summary: Update an inspection
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InspectionUpdate"
+      responses:
+        "200":
+          description: Updated inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+  /inspections/{id}/report/readiness:
+    get:
+      operationId: getReportReadiness
+      tags: [reports]
+      summary: Check whether an inspection report is ready
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Report readiness checks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportReadiness"
+  /inspections/{id}/report/ready:
+    post:
+      operationId: markReportReady
+      tags: [reports]
+      summary: Mark a completed inspection report ready for delivery
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Updated inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Inspection"
+        "409":
+          description: Completion checks failed
+  /inspections/{id}/report/share:
+    post:
+      operationId: shareReport
+      tags: [reports]
+      summary: Share a ready report with a client or agent
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportShareInput"
+      responses:
+        "200":
+          description: Delivery details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportDelivery"
+        "409":
+          description: Report is not ready
+  /inspections/{id}/report/translation-preview:
+    post:
+      operationId: previewReportTranslation
+      tags: [reports]
+      summary: Preview a translated plain-language report summary
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportTranslationPreviewInput"
+      responses:
+        "200":
+          description: Translation preview for inspector review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportTranslationPreview"
+        "409":
+          description: Report readiness checks failed
+        "503":
+          description: Translation service is unavailable
+  /inspections/{id}/report/revoke:
+    post:
+      operationId: revokeReportLink
+      tags: [reports]
+      summary: Revoke the current shared report link
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportLinkControlInput"
+      responses:
+        "200":
+          description: Revoked report link state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportLinkAction"
+        "409":
+          description: No active report link exists
+  /inspections/{id}/report/rotate:
+    post:
+      operationId: rotateReportLink
+      tags: [reports]
+      summary: Replace the current shared report link
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportLinkControlInput"
+      responses:
+        "200":
+          description: Replacement report link state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportLinkAction"
+        "409":
+          description: Report is not ready or has no active link
+  /inspections/{id}/report/recover:
+    post:
+      operationId: recoverReportLink
+      tags: [reports]
+      summary: Generate a replacement link after an automatic invalidation
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Replacement report link state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportLinkAction"
+        "409":
+          description: No recoverable invalidated link exists or report readiness checks failed
+  /inspections/{id}/report/delivery-history:
+    get:
+      operationId: listReportDeliveryHistory
+      tags: [reports]
+      summary: List report delivery security events
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Delivery history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportDeliveryEvent"
+  /reports/{token}:
+    get:
+      operationId: getSharedReport
+      tags: [reports]
+      summary: Open a shared client report
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 16
+      responses:
+        "200":
+          description: Client-safe report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientReport"
+        "404":
+          description: Report not found
+    post:
+      operationId: markReportViewed
+      tags: [reports]
+      summary: Record that a recipient rendered a shared report
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 16
+      responses:
+        "200":
+          description: View receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportViewReceipt"
+        "404":
+          description: Report not found
+  /reports/{token}/media/{mediaId}/{variant}:
+    get:
+      operationId: getReportMedia
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema: { type: string, minLength: 16 }
+        - name: mediaId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+        - name: variant
+          in: path
+          required: true
+          schema: { type: string, enum: [original, thumbnail] }
+      responses:
+        "200":
+          description: Report-scoped media bytes
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+            image/webp:
+              schema: { type: string, format: binary }
+        "404":
+          description: Media not found or not available to this report token
+  /inspections/{id}/findings:
+    post:
+      operationId: createFinding
+      tags: [findings]
+      summary: Add a finding to an inspection
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingInput"
+      responses:
+        "200":
+          description: Existing finding returned for an idempotent retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finding"
+        "201":
+          description: Created finding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finding"
+  /inspections/{id}/media/upload-url:
+    post:
+      operationId: requestFindingMediaUpload
+      tags: [findings]
+      summary: Request a short-lived upload URL for finding media
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingMediaUploadInput"
+      responses:
+        "201":
+          description: Short-lived upload URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingMediaUpload"
+        "503":
+          description: App Storage is not available
+  /inspections/{id}/media/complete:
+    post:
+      operationId: completeFindingMediaUpload
+      tags: [findings]
+      summary: Verify an uploaded finding media object and attach it to the finding
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingMediaCompleteInput"
+      responses:
+        "200":
+          description: Previously verified finding media for an idempotent retry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingMedia"
+        "201":
+          description: Verified finding media
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingMedia"
+        "409":
+          description: Upload verification failed or object was already attached
+        "503":
+          description: App Storage is not available
+  /findings/{id}/media/{mediaId}:
+    patch:
+      operationId: updateFindingMediaClassification
+      tags: [findings]
+      summary: Update a finding media classification or caption
+      parameters:
+        - $ref: "#/components/parameters/FindingId"
+        - $ref: "#/components/parameters/MediaId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingMediaClassificationUpdate"
+      responses:
+        "200":
+          description: Updated finding media
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingMedia"
+        "404":
+          description: Media not found
+    delete:
+      operationId: deleteFindingMedia
+      tags: [findings]
+      summary: Delete a finding media object
+      parameters:
+        - $ref: "#/components/parameters/FindingId"
+        - $ref: "#/components/parameters/MediaId"
+      responses:
+        "200":
+          description: Deleted finding media
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingMediaDeletionResponse"
+        "404":
+          description: Media not found
+  /inspections/{id}/potential-defects:
+    get:
+      operationId: listPotentialDefects
+      tags: [findings]
+      summary: List potential defect alerts for an inspection
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Potential defect alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PotentialDefect"
+    post:
+      operationId: createPotentialDefect
+      tags: [findings]
+      summary: Place a potential defect alert
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PotentialDefectInput"
+      responses:
+        "201":
+          description: Created potential defect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PotentialDefect"
+  /potential-defects/{id}:
+    patch:
+      operationId: updatePotentialDefect
+      tags: [findings]
+      summary: Confirm or dismiss a potential defect alert
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PotentialDefectUpdate"
+      responses:
+        "200":
+          description: Updated potential defect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PotentialDefect"
+  /findings/{id}:
+    patch:
+      operationId: updateFinding
+      tags: [findings]
+      summary: Update a finding
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingUpdate"
+      responses:
+        "200":
+          description: Updated finding
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Finding"
+  /standards:
+    get:
+      operationId: listStandards
+      tags: [standards]
+      summary: Search standards references
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Standards references
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StandardReference"
+  /checklist:
+    get:
+      operationId: listChecklist
+      tags: [inspections]
+      summary: List checklist items for a report type
+      parameters:
+        - name: reportType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [pre_purchase, new_construction, pest, dilapidation, handover, insurance_assessment, other]
+      responses:
+        "200":
+          description: Checklist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChecklistItem"
+  /ai/findings/generate:
+    post:
+      operationId: generateFindingWording
+      tags: [ai]
+      summary: Generate professional finding wording
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FindingWordingInput"
+      responses:
+        "200":
+          description: Generated finding wording
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FindingWordingOutput"
+  /ai/vision/inspect:
+    post:
+      operationId: analyzeInspectionImage
+      tags: [ai]
+      summary: Identify visible conditions that require inspector review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InspectionImageInput"
+      responses:
+        "200":
+          description: Potential visible issues for inspector verification
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionImageAnalysis"
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    FindingId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    MediaId:
+      name: mediaId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Inspection:
+      type: object
+      required: [id, title, propertyAddress, clientName, inspectionDate, inspectorName, reportType, status, reportStatus, deliveryStatus, findingsCount, highRiskCount, updatedAt]
+      properties:
+        id: { type: integer }
+        ownerId: { type: string }
+        title: { type: string }
+        propertyAddress: { type: string }
+        clientName: { type: string }
+        clientEmail: { type: ["string", "null"], format: email }
+        agentEmail: { type: ["string", "null"], format: email }
+        inspectionDate: { type: string, format: date }
+        inspectorName: { type: string }
+        reportType: { type: string, enum: [pre_purchase, new_construction, pest, dilapidation, handover, insurance_assessment, other] }
+        status: { type: string, enum: [draft, in_progress, complete] }
+        reportStatus: { type: string, enum: [draft, ready] }
+        deliveryStatus: { type: string, enum: [not_shared, sending, shared, sent, delivered, failed, viewed] }
+        reportRecipientType: { type: ["string", "null"], enum: [client, agent, null] }
+        reportRecipientEmail: { type: ["string", "null"] }
+        reportSummaryLanguage: { type: ["string", "null"], enum: [en, zh-Hans, vi, ar, null] }
+        reportShareToken: { type: ["string", "null"] }
+        reportDeliveryError: { type: ["string", "null"] }
+        reportReadyAt: { type: ["string", "null"], format: date-time }
+        reportDeliveryAttemptedAt: { type: ["string", "null"], format: date-time }
+        reportSharedAt: { type: ["string", "null"], format: date-time }
+        reportDeliveredAt: { type: ["string", "null"], format: date-time }
+        reportViewedAt: { type: ["string", "null"], format: date-time }
+        findingsCount: { type: integer }
+        highRiskCount: { type: integer }
+        updatedAt: { type: string, format: date-time }
+    InspectionInput:
+      type: object
+      required: [title, propertyAddress, clientName, inspectionDate, inspectorName]
+      properties:
+        title: { type: string, minLength: 1 }
+        propertyAddress: { type: string, minLength: 1 }
+        clientName: { type: string, minLength: 1 }
+        clientEmail: { type: string, format: email }
+        agentEmail: { type: string, format: email }
+        inspectionDate: { type: string, format: date }
+        inspectorName: { type: string, minLength: 1 }
+        reportType: { type: string, enum: [pre_purchase, new_construction, pest, dilapidation, handover, insurance_assessment, other] }
+        status: { type: string, enum: [draft, in_progress, complete] }
+    InspectionAssignmentInput:
+      type: object
+      required: [ownerId]
+      properties:
+        ownerId: { type: string, minLength: 1 }
+    WorkspaceInspector:
+      type: object
+      required: [id, displayName, role]
+      properties:
+        id: { type: string }
+        displayName: { type: string }
+        email: { type: ["string", "null"] }
+        role: { type: string, enum: [inspector, manager, admin] }
+    ClientLanguageGlossaryTerm:
+      type: object
+      required: [id, term, suggestedMeaning, active, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        term: { type: string }
+        suggestedMeaning: { type: string }
+        active: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ClientLanguageGlossaryInput:
+      type: object
+      required: [term, suggestedMeaning]
+      properties:
+        term: { type: string, minLength: 1, maxLength: 80 }
+        suggestedMeaning: { type: string, minLength: 1, maxLength: 240 }
+    ClientLanguageGlossaryEvent:
+      type: object
+      required: [id, glossaryTermId, action, term, suggestedMeaning, actorDisplayName, happenedAt]
+      properties:
+        id: { type: integer }
+        glossaryTermId: { type: integer }
+        action: { type: string, enum: [added, edited, retired, restored] }
+        term: { type: string }
+        suggestedMeaning: { type: string }
+        previousTerm: { type: ["string", "null"] }
+        previousSuggestedMeaning: { type: ["string", "null"] }
+        actorDisplayName: { type: string }
+        happenedAt: { type: string, format: date-time }
+    ClientLanguageGlossaryUpdate:
+      type: object
+      properties:
+        term: { type: string, minLength: 1, maxLength: 80 }
+        suggestedMeaning: { type: string, minLength: 1, maxLength: 240 }
+        active: { type: boolean }
+    InspectionUpdate:
+      type: object
+      properties:
+        title: { type: string, minLength: 1 }
+        propertyAddress: { type: string, minLength: 1 }
+        clientName: { type: string, minLength: 1 }
+        clientEmail: { type: ["string", "null"], format: email }
+        agentEmail: { type: ["string", "null"], format: email }
+        inspectionDate: { type: string, format: date }
+        inspectorName: { type: string, minLength: 1 }
+        reportType: { type: string, enum: [pre_purchase, new_construction, pest, dilapidation, handover, insurance_assessment, other] }
+        status: { type: string, enum: [draft, in_progress, complete] }
+    InspectionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Inspection"
+        - type: object
+          required: [findings]
+          properties:
+            findings:
+              type: array
+              items:
+                $ref: "#/components/schemas/Finding"
+    ReportReadinessCheck:
+      type: object
+      required: [key, label, complete, detail, missingFindings]
+      properties:
+        key: { type: string, enum: [inspection_complete, findings_present, recommendations_complete, client_explanations_complete, report_photos_present] }
+        label: { type: string }
+        complete: { type: boolean }
+        detail: { type: string }
+        missingFindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportReadinessFinding"
+    ReportReadinessFinding:
+      type: object
+      required: [id, title]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+    ReportReadinessWarning:
+      type: object
+      required: [kind, message]
+      properties:
+        kind: { type: string, enum: [long_sentence, technical_term] }
+        message: { type: string }
+        term: { type: string }
+    ReportReadinessAdvisory:
+      type: object
+      required: [id, title, warnings]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportReadinessWarning"
+    ReportReadiness:
+      type: object
+      required: [ready, completedCount, totalCount, checks, advisories]
+      properties:
+        ready: { type: boolean }
+        completedCount: { type: integer }
+        totalCount: { type: integer }
+        checks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportReadinessCheck"
+        advisories:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportReadinessAdvisory"
+    ReportShareInput:
+      type: object
+      required: [recipientType]
+      properties:
+        recipientType: { type: string, enum: [client, agent] }
+        summaryLanguage: { type: string, enum: [en, zh-Hans, vi, ar], default: en }
+        reviewedTranslations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewedReportTranslation"
+    ReportTranslationPreviewInput:
+      type: object
+      required: [summaryLanguage]
+      properties:
+        summaryLanguage: { type: string, enum: [en, zh-Hans, vi, ar] }
+        findingId: { type: integer, minimum: 1 }
+    ReportTranslationPreview:
+      type: object
+      required: [summaryLanguage, authorityNotice, translations]
+      properties:
+        summaryLanguage: { type: string, enum: [en, zh-Hans, vi, ar] }
+        authorityNotice: { type: string }
+        translations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportTranslationPreviewItem"
+    ReportTranslationPreviewItem:
+      type: object
+      required: [id, title, sourceText, translatedText]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        sourceText: { type: string }
+        translatedText: { type: string }
+    ReviewedReportTranslation:
+      type: object
+      required: [id, text]
+      properties:
+        id: { type: integer }
+        text: { type: string, minLength: 1, maxLength: 2000 }
+    ReportDelivery:
+      type: object
+      required: [deliveryStatus, recipientType, recipientEmail, summaryLanguage, shareUrl, attemptedAt]
+      properties:
+        deliveryStatus: { type: string, enum: [sent, delivered, failed, viewed] }
+        recipientType: { type: string, enum: [client, agent] }
+        recipientEmail: { type: string, format: email }
+        summaryLanguage: { type: string, enum: [en, zh-Hans, vi, ar] }
+        shareUrl: { type: string }
+        deliveryError: { type: ["string", "null"] }
+        attemptedAt: { type: string, format: date-time }
+        sentAt: { type: ["string", "null"], format: date-time }
+        deliveredAt: { type: ["string", "null"], format: date-time }
+        viewedAt: { type: ["string", "null"], format: date-time }
+    ReportViewReceipt:
+      type: object
+      required: [viewedAt]
+      properties:
+        viewedAt: { type: string, format: date-time }
+    ReportLinkAction:
+      type: object
+      required: [action, reportStatus, deliveryStatus, shareUrl, happenedAt]
+      properties:
+        action: { type: string, enum: [revoked, rotated, recovered] }
+        reportStatus: { type: string, enum: [ready] }
+        deliveryStatus: { type: string, enum: [not_shared, shared] }
+        shareUrl: { type: ["string", "null"] }
+        happenedAt: { type: string, format: date-time }
+    ReportLinkControlInput:
+      type: object
+      required: [currentShareToken]
+      properties:
+        currentShareToken: { type: string, minLength: 16 }
+    ReportDeliveryEvent:
+      type: object
+      required: [id, eventType, recipientType, recipientEmail, actorDisplayName, createdAt]
+      properties:
+        id: { type: integer }
+        eventType: { type: string, enum: [shared, viewed, revoked, rotated, recovered, automatically_invalidated, email_sent, email_failed, translation_reviewed] }
+        recipientType: { type: ["string", "null"], enum: [client, agent, null] }
+        recipientEmail: { type: ["string", "null"], format: email }
+        reason: { type: ["string", "null"] }
+        reviewedSummaryLanguage: { type: ["string", "null"], enum: [zh-Hans, vi, ar, null] }
+        reviewCompletedAt: { type: ["string", "null"], format: date-time }
+        actorDisplayName: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    ReportFinding:
+      type: object
+      required: [id, area, subCategory, category, title, location, severity, observed, standardRef, standardTitle, requirement, tolerance, assessment, recommendation, clientExplanation, reportPhotosCount, media]
+      properties:
+        id: { type: integer }
+        area: { type: string }
+        subCategory: { type: string }
+        category: { type: string }
+        title: { type: string }
+        location: { type: string }
+        severity: { type: string, enum: [critical, high, medium, low, advisory] }
+        observed: { type: string }
+        standardRef: { type: string }
+        standardTitle: { type: string }
+        requirement: { type: string }
+        tolerance: { type: string }
+        measuredValue: { type: ["number", "null"] }
+        unit: { type: ["string", "null"] }
+        assessment: { type: string, enum: [outside_tolerance, non_compliant, monitor, compliant] }
+        recommendation: { type: string }
+        clientExplanation: { type: ["string", "null"] }
+        reportPhotosCount: { type: integer }
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportMedia"
+    ReportMedia:
+      type: object
+      required: [id, contentType, caption, url, thumbnailUrl]
+      properties:
+        id: { type: integer }
+        contentType: { type: string }
+        caption: { type: ["string", "null"] }
+        url: { type: string }
+        thumbnailUrl: { type: ["string", "null"] }
+    ClientReport:
+      type: object
+      required: [inspectionId, reportNumber, title, propertyAddress, clientName, inspectionDate, inspectorName, reportType, issuedAt, summaryLanguage, translationNotice, plainLanguageSummary, findings]
+      properties:
+        inspectionId: { type: integer }
+        reportNumber: { type: string }
+        title: { type: string }
+        propertyAddress: { type: string }
+        clientName: { type: string }
+        inspectionDate: { type: string, format: date }
+        inspectorName: { type: string }
+        reportType: { type: string }
+        issuedAt: { type: string, format: date-time }
+        summaryLanguage: { type: string, enum: [en, zh-Hans, vi, ar] }
+        translationNotice: { type: string }
+        plainLanguageSummary:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlainLanguageSummaryItem"
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportFinding"
+    PlainLanguageSummaryItem:
+      type: object
+      required: [id, title, location, severity, reportPosition, summary]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        location: { type: string }
+        severity: { type: string }
+        reportPosition: { type: integer }
+        summary: { type: string }
+    Finding:
+      type: object
+      required: [id, inspectionId, area, subCategory, category, title, location, severity, pestRelevance, observed, standardRef, standardTitle, requirement, tolerance, assessment, recommendation, clientExplanation, photosCount, reportPhotosCount, evidencePhotosCount, backupDestination, media, createdAt]
+      properties:
+        id: { type: integer }
+        inspectionId: { type: integer }
+        area: { type: string }
+        subCategory: { type: string }
+        category: { type: string, enum: [structural, external, internal, wet_area, roofing, pest, safety, services] }
+        title: { type: string }
+        location: { type: string }
+        severity: { type: string, enum: [critical, high, medium, low, advisory] }
+        pestRelevance: { type: string, enum: [not_applicable, conducive_condition, evidence_of_activity, further_investigation] }
+        observed: { type: string }
+        standardRef: { type: string }
+        standardTitle: { type: string }
+        requirement: { type: string }
+        tolerance: { type: string }
+        measuredValue: { type: ["number", "null"] }
+        unit: { type: ["string", "null"] }
+        assessment: { type: string, enum: [outside_tolerance, non_compliant, monitor, compliant] }
+        recommendation: { type: string }
+        clientExplanation: { type: ["string", "null"] }
+        photosCount: { type: integer }
+        reportPhotosCount: { type: integer }
+        evidencePhotosCount: { type: integer }
+        backupDestination: { type: string, enum: [app_only, device, company_drive] }
+        media:
+          type: array
+          items:
+            $ref: "#/components/schemas/FindingMedia"
+        createdAt: { type: string, format: date-time }
+    FindingMediaUploadInput:
+      type: object
+      required: [findingId, classification, contentType, sizeBytes, sha256]
+      properties:
+        findingId: { type: integer, minimum: 1 }
+        classification: { type: string, enum: [client_report, private_evidence] }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        sizeBytes: { type: integer, minimum: 1, maximum: 26214400 }
+        sha256: { type: string, pattern: "^[a-fA-F0-9]{64}$" }
+    FindingMediaUpload:
+      type: object
+      required: [uploadUrl, objectPath, expiresAt]
+      properties:
+        uploadUrl: { type: string, format: uri }
+        objectPath: { type: string }
+        expiresAt: { type: string, format: date-time }
+    FindingMediaCompleteInput:
+      type: object
+      required: [findingId, classification, objectPath, fileName, contentType, sizeBytes, sha256]
+      properties:
+        findingId: { type: integer, minimum: 1 }
+        classification: { type: string, enum: [client_report, private_evidence] }
+        objectPath: { type: string, pattern: "^/objects/finding-media/[0-9]+/[0-9]+/(client_report|private_evidence)/[a-f0-9]+$" }
+        fileName: { type: string, minLength: 1, maxLength: 255 }
+        caption: { type: ["string", "null"], maxLength: 500 }
+        contentType: { type: string, enum: [image/jpeg, image/png, image/webp] }
+        sizeBytes: { type: integer, minimum: 1, maximum: 26214400 }
+        sha256: { type: string, pattern: "^[a-fA-F0-9]{64}$" }
+    FindingMedia:
+      type: object
+      required: [id, findingId, classification, contentType, fileName, caption, sizeBytes, createdAt]
+      properties:
+        id: { type: integer }
+        findingId: { type: integer }
+        classification: { type: string, enum: [client_report, private_evidence] }
+        contentType: { type: string }
+        fileName: { type: string }
+        caption: { type: ["string", "null"] }
+        sizeBytes: { type: integer }
+        createdAt: { type: string, format: date-time }
+    FindingMediaClassificationUpdate:
+      type: object
+      required: [classification]
+      properties:
+        classification: { type: string, enum: [client_report, private_evidence] }
+        caption: { type: ["string", "null"], maxLength: 500 }
+    FindingMediaDeletionResponse:
+      type: object
+      required: [deleted, id]
+      properties:
+        deleted: { type: boolean }
+        id: { type: integer }
+    PotentialDefect:
+      type: object
+      required: [id, inspectionId, detectionSource, status, title, note, anchorX, anchorY, standardCode, standardTitle, clauseNumber, clauseExtract, pageReference, sourceEdition, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        inspectionId: { type: integer }
+        detectionSource: { type: string, enum: [manual, ar] }
+        status: { type: string, enum: [potential, confirmed, dismissed] }
+        title: { type: string }
+        note: { type: ["string", "null"] }
+        anchorX: { type: number, minimum: 0, maximum: 100 }
+        anchorY: { type: number, minimum: 0, maximum: 100 }
+        standardCode: { type: string }
+        standardTitle: { type: string }
+        clauseNumber: { type: string }
+        clauseExtract: { type: string }
+        pageReference: { type: string }
+        sourceEdition: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    PotentialDefectInput:
+      type: object
+      required: [detectionSource, title, anchorX, anchorY, standardCode, standardTitle, clauseNumber, clauseExtract, pageReference, sourceEdition]
+      properties:
+        detectionSource: { type: string, enum: [manual, ar] }
+        title: { type: string, minLength: 1 }
+        note: { type: ["string", "null"] }
+        anchorX: { type: number, minimum: 0, maximum: 100 }
+        anchorY: { type: number, minimum: 0, maximum: 100 }
+        standardCode: { type: string, minLength: 1 }
+        standardTitle: { type: string, minLength: 1 }
+        clauseNumber: { type: string, minLength: 1 }
+        clauseExtract: { type: string, minLength: 1 }
+        pageReference: { type: string, minLength: 1 }
+        sourceEdition: { type: string, minLength: 1 }
+    PotentialDefectUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [potential, confirmed, dismissed] }
+        title: { type: string, minLength: 1 }
+        note: { type: ["string", "null"] }
+        pageReference: { type: string, minLength: 1 }
+    FindingInput:
+      type: object
+      required: [category, title, location, severity, observed, standardRef, standardTitle, requirement, tolerance, assessment, recommendation]
+      properties:
+        creationRequestId: { type: string, minLength: 8, maxLength: 128, pattern: "^[A-Za-z0-9_-]+$" }
+        area: { type: string, minLength: 1 }
+        subCategory: { type: string, minLength: 1 }
+        category: { type: string, enum: [structural, external, internal, wet_area, roofing, pest, safety, services] }
+        title: { type: string, minLength: 1 }
+        location: { type: string, minLength: 1 }
+        severity: { type: string, enum: [critical, high, medium, low, advisory] }
+        pestRelevance: { type: string, enum: [not_applicable, conducive_condition, evidence_of_activity, further_investigation] }
+        observed: { type: string, minLength: 1 }
+        standardRef: { type: string, minLength: 1 }
+        standardTitle: { type: string, minLength: 1 }
+        requirement: { type: string, minLength: 1 }
+        tolerance: { type: string, minLength: 1 }
+        measuredValue: { type: ["number", "null"] }
+        unit: { type: ["string", "null"] }
+        assessment: { type: string, enum: [outside_tolerance, non_compliant, monitor, compliant] }
+        recommendation: { type: string, minLength: 1 }
+        clientExplanation: { type: ["string", "null"] }
+        photosCount: { type: integer, minimum: 0 }
+        reportPhotosCount: { type: integer, minimum: 0 }
+        evidencePhotosCount: { type: integer, minimum: 0 }
+        backupDestination: { type: string, enum: [app_only, device, company_drive] }
+    FindingUpdate:
+      type: object
+      properties:
+        area: { type: string, minLength: 1 }
+        subCategory: { type: string, minLength: 1 }
+        category: { type: string, enum: [structural, external, internal, wet_area, roofing, pest, safety, services] }
+        title: { type: string, minLength: 1 }
+        location: { type: string, minLength: 1 }
+        severity: { type: string, enum: [critical, high, medium, low, advisory] }
+        pestRelevance: { type: string, enum: [not_applicable, conducive_condition, evidence_of_activity, further_investigation] }
+        observed: { type: string, minLength: 1 }
+        standardRef: { type: string, minLength: 1 }
+        standardTitle: { type: string, minLength: 1 }
+        requirement: { type: string, minLength: 1 }
+        tolerance: { type: string, minLength: 1 }
+        measuredValue: { type: ["number", "null"] }
+        unit: { type: ["string", "null"] }
+        assessment: { type: string, enum: [outside_tolerance, non_compliant, monitor, compliant] }
+        recommendation: { type: string, minLength: 1 }
+        clientExplanation: { type: ["string", "null"] }
+        photosCount: { type: integer, minimum: 0 }
+        reportPhotosCount: { type: integer, minimum: 0 }
+        evidencePhotosCount: { type: integer, minimum: 0 }
+        backupDestination: { type: string, enum: [app_only, device, company_drive] }
+    StandardReference:
+      type: object
+      required: [id, code, title, category, clause, requirement, tolerance, source]
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        title: { type: string }
+        category: { type: string }
+        clause: { type: string }
+        requirement: { type: string }
+        tolerance: { type: string }
+        source: { type: string }
+    ChecklistItem:
+      type: object
+      required: [id, reportType, area, subCategory, category, prompt, sortOrder]
+      properties:
+        id: { type: integer }
+        reportType: { type: string, enum: [pre_purchase, new_construction, pest, dilapidation, handover, insurance_assessment, other] }
+        area: { type: string }
+        subCategory: { type: string }
+        category: { type: string, enum: [structural, external, internal, wet_area, roofing, pest, safety, services] }
+        prompt: { type: string }
+        sortOrder: { type: integer }
+    FindingWordingInput:
+      type: object
+      required: [phrase, action, length, includeTradeRecommendation]
+      properties:
+        phrase: { type: string, minLength: 2, maxLength: 2000 }
+        action: { type: string, enum: [generate, improve, shorten, make_major, explain_simply] }
+        length: { type: string, enum: [concise, standard, detailed] }
+        includeTradeRecommendation: { type: boolean }
+        existingObserved: { type: string }
+        existingRecommendation: { type: string }
+    FindingWordingOutput:
+      type: object
+      required: [title, observed, recommendation, clientExplanation]
+      properties:
+        title: { type: string }
+        observed: { type: string }
+        recommendation: { type: string }
+        clientExplanation: { type: string }
+    InspectionImageInput:
+      type: object
+      required: [imageDataUrl]
+      properties:
+        imageDataUrl:
+          type: string
+          minLength: 32
+          maxLength: 8000000
+          pattern: "^data:image/(jpeg|jpg|png|webp);base64,"
+        area:
+          type: string
+          maxLength: 120
+        inspectorNote:
+          type: string
+          maxLength: 1000
+    VisionFinding:
+      type: object
+      required: [label, category, confidence, locationHint, observation, recommendation, limitation, suggestedSeverity]
+      properties:
+        label: { type: string }
+        category: { type: string, enum: [structural, external, internal, wet_area, roofing, pest, safety, services] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        locationHint: { type: string }
+        observation: { type: string }
+        recommendation: { type: string }
+        limitation: { type: string }
+        suggestedSeverity: { type: string, enum: [critical, high, medium, low, advisory] }
+    InspectionImageAnalysis:
+      type: object
+      required: [summary, findings, disclaimer]
+      properties:
+        summary: { type: string }
+        findings:
+          type: array
+          maxItems: 6
+          items:
+            $ref: "#/components/schemas/VisionFinding"
+        disclaimer: { type: string }
+    SeverityCounts:
+      type: object
+      required: [critical, high, medium, low, advisory]
+      properties:
+        critical: { type: integer }
+        high: { type: integer }
+        medium: { type: integer }
+        low: { type: integer }
+        advisory: { type: integer }
+    DashboardSummary:
+      type: object
+      required: [activeInspections, completedInspections, openFindings, highRiskFindings, severityCounts, recentInspections]
+      properties:
+        activeInspections: { type: integer }
+        completedInspections: { type: integer }
+        openFindings: { type: integer }
+        highRiskFindings: { type: integer }
+        severityCounts:
+          $ref: "#/components/schemas/SeverityCounts"
+        recentInspections:
+          type: array
+          items:
+            $ref: "#/components/schemas/Inspection"
+    UsageMetric:
+      type: object
+      required: [key, label, used, limit, remaining, unit, percentUsed, status]
+      properties:
+        key: { type: string }
+        label: { type: string }
+        used: { type: integer }
+        limit: { type: integer }
+        remaining: { type: integer }
+        unit: { type: string }
+        percentUsed: { type: integer }
+        status:
+          type: string
+          enum: [healthy, warning, at_limit]
+    WorkspaceUsage:
+      type: object
+      required: [plan, period, metrics, warnings]
+      properties:
+        plan:
+          type: object
+          required: [id, name, billingPeriod]
+          properties:
+            id: { type: string, enum: [solo, team, practice] }
+            name: { type: string }
+            billingPeriod: { type: string, enum: [monthly, annual] }
+        period:
+          type: object
+          required: [startsAt, endsAt]
+          properties:
+            startsAt: { type: string, format: date-time }
+            endsAt: { type: string, format: date-time }
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageMetric"
+        warnings:
+          type: array
+          items: { type: string }

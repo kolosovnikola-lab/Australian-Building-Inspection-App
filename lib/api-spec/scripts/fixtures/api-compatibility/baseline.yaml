@@ -1,0 +1,67 @@
+openapi: 3.1.0
+info:
+  title: Compatibility Fixture
+  version: 1.0.0
+paths:
+  /inspections/{inspectionId}:
+    get:
+      operationId: getInspection
+      parameters:
+        - name: inspectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionResponse"
+  /inspections:
+    post:
+      operationId: createInspection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInspection"
+      responses:
+        "201":
+          description: Created inspection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InspectionResponse"
+components:
+  schemas:
+    InspectionResponse:
+      type: object
+      required:
+        - id
+        - status
+        - summary
+      properties:
+        id:
+          type: string
+        status:
+          $ref: "#/components/schemas/InspectionStatus"
+        summary:
+          type: string
+    InspectionStatus:
+      type: string
+      enum:
+        - draft
+        - published
+        - archived
+    CreateInspection:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        address:
+          type: string

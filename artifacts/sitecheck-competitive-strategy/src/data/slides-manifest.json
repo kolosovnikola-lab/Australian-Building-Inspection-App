@@ -1,0 +1,82 @@
+[
+  {
+    "id": "9ad4fe28-85ac-41bd-972b-f77765183201",
+    "position": 1,
+    "filepath": "src/pages/slides/Slide1.tsx",
+    "title": "SiteCheck AU — Competitive Product Strategy",
+    "description": "Cover",
+    "speakerNotes": ""
+  },
+  {
+    "id": "bf27f5ac-274d-4353-98a0-210d1d9ce202",
+    "position": 2,
+    "filepath": "src/pages/slides/Slide2.tsx",
+    "title": "The opportunity: combine four products in one coherent workflow",
+    "description": "Strategic synthesis",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b417da8a-4c59-4d67-bccb-08feb50b5203",
+    "position": 3,
+    "filepath": "src/pages/slides/Slide3.tsx",
+    "title": "Australian competitors set the minimum bar",
+    "description": "Australian competitive landscape",
+    "speakerNotes": ""
+  },
+  {
+    "id": "49da9004-c1d8-4d07-a16c-e2ff2b114204",
+    "position": 4,
+    "filepath": "src/pages/slides/Slide4.tsx",
+    "title": "Global leaders show where buyer expectations are moving",
+    "description": "Global home inspection benchmarks",
+    "speakerNotes": ""
+  },
+  {
+    "id": "3be97566-0f32-4bcc-98c6-1190bc8dd205",
+    "position": 5,
+    "filepath": "src/pages/slides/Slide5.tsx",
+    "title": "Adjacent platforms reveal the next competitive frontier",
+    "description": "Field and claims systems",
+    "speakerNotes": ""
+  },
+  {
+    "id": "da93e6bb-ae0b-4971-8143-072963b46606",
+    "position": 6,
+    "filepath": "src/pages/slides/Slide6.tsx",
+    "title": "Feature matrix: SiteCheck has the right core—and clear gaps",
+    "description": "Current state assessment",
+    "speakerNotes": ""
+  },
+  {
+    "id": "b7054918-6f31-4e6c-bb62-fdce8854ef07",
+    "position": 7,
+    "filepath": "src/pages/slides/Slide7.tsx",
+    "title": "Competitor complaints tell us what not to copy",
+    "description": "Product guardrails",
+    "speakerNotes": ""
+  },
+  {
+    "id": "342639d4-a2ec-42d1-972f-e9949fd2c208",
+    "position": 8,
+    "filepath": "src/pages/slides/Slide8.tsx",
+    "title": "Recommended product position: the evidence-first inspection operating system",
+    "description": "Positioning recommendation",
+    "speakerNotes": ""
+  },
+  {
+    "id": "dd0c47b6-30ed-473f-8196-830a90a1ed09",
+    "position": 9,
+    "filepath": "src/pages/slides/Slide9.tsx",
+    "title": "Roadmap: build foundations before business-suite breadth",
+    "description": "Prioritized roadmap",
+    "speakerNotes": ""
+  },
+  {
+    "id": "1aab18fd-1144-49a1-b1b6-5c6f1f762210",
+    "position": 10,
+    "filepath": "src/pages/slides/Slide10.tsx",
+    "title": "Sources and validation plan",
+    "description": "Sources and next validation",
+    "speakerNotes": ""
+  }
+]
