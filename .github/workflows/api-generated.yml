@@ -1,0 +1,54 @@
+name: API generated clients
+
+# Run on every PR so this check can be required without path-filtered PRs
+# waiting forever. This includes spec, generator, dependency and client edits.
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  merge_group:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-generated:
+    name: Clean API generation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository and compatibility history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.13.0
+
+      # No version override: pnpm/action-setup reads packageManager from the
+      # root package.json. Dependency installation belongs to the clean check.
+      - name: Set up repository-pinned pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Verify package-manager pin
+        shell: bash
+        run: |
+          expected="$(node -p "require('./package.json').packageManager")"
+          actual="pnpm@$(pnpm --version)"
+          if [ "$actual" != "$expected" ]; then
+            echo "::error title=API generation setup failed::Expected $expected but found $actual"
+            exit 1
+          fi
+
+      # Keep the clean command's setup, generation and drift diagnostics intact.
+      # Do not mask its exit status or replace it with a non-frozen install.
+      - name: Locked install, generation and drift validation
+        env:
+          OPENAPI_COMPATIBILITY_BASELINE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || '' }}
+        run: pnpm run validate:api-generated:clean
