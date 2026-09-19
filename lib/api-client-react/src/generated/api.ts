@@ -2931,3 +2931,5 @@ export const useAnalyzeInspectionImage = <TError = ErrorType<unknown>,
       return useMutation(getAnalyzeInspectionImageMutationOptions(options));
     }
 
+
+// Deliberate generated-file drift: merge-gate verification only.

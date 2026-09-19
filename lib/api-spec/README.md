@@ -19,6 +19,28 @@ To enforce this as a merge gate, repository administrators should require the
 **Clean API generation** status check in their branch protection/ruleset.
 The workflow runs automatically, but does not itself change repository rules.
 
+## Hosted merge enforcement
+
+The public source repository is
+[`kolosovnikola-lab/Australian-Building-Inspection-App`](https://github.com/kolosovnikola-lab/Australian-Building-Inspection-App),
+with `main` as its default branch. Its active
+[Require clean API generation ruleset](https://github.com/kolosovnikola-lab/Australian-Building-Inspection-App/rules/23698834)
+requires **Clean API generation**, specifically from the GitHub Actions app.
+Branches must be up to date before merging. The ruleset has no bypass actors,
+including administrators; unrelated repository rules must remain unchanged.
+
+Keep the job name stable: renaming the job without updating the ruleset leaves
+pull requests waiting for a required check that no longer runs. Never remove the
+requirement just to merge a failed generation check; fix the failure and rerun it.
+If the default branch changes, update the ruleset's branch target and the
+workflow's push triggers together.
+
+To verify enforcement after changing repository settings, use a temporary pull
+request with deliberate generated-file drift. Wait for the real hosted check to
+fail, confirm GitHub rejects merging, then remove the drift and confirm a
+successful hosted check permits merging. Do not replace this test with a manually
+posted commit status: the required check is bound to the GitHub Actions app.
+
 # API contract changes
 
 `openapi.yaml` is the source of truth for the API contract. The generated
